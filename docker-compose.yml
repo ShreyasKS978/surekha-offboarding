@@ -1,0 +1,58 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: surekha-postgres-offboarding
+    ports:
+      - "6569:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: offboarding_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+
+  backend:
+    build: ./Backend
+    container_name: surekha-backend-offboarding
+    ports:
+      - "3012:3012"
+    depends_on:
+      - postgres
+    environment:
+      DB_USER: postgres
+      DB_PASSWORD: admin123
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: offboarding_db
+      PORT: 3012
+    restart: unless-stopped
+
+  employee-offboarding:
+    build: ./employee-offboarding
+    container_name: surekha-employee-offboarding
+    ports:
+      - "8073:80"
+    depends_on:
+      - backend
+    environment:
+      REACT_APP_API_URL: http://backend:3012
+    restart: unless-stopped
+
+  hr-offboarding:
+    build: ./hr-offboarding
+    container_name: surekha-hr-offboarding
+    ports:
+      - "8074:80"
+    depends_on:
+      - backend
+    environment:
+      REACT_APP_API_URL: http://backend:3012
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+
